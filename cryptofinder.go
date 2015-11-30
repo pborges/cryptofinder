@@ -7,6 +7,7 @@ import (
 	"log"
 	"bytes"
 	"fmt"
+	"encoding/hex"
 )
 
 var foundBanners []string
@@ -33,12 +34,19 @@ func visit(path string, f os.FileInfo, err error) error {
 				log.Println("ERR: file open:", f, " ", err)
 			} else {
 				defer file.Close()
-				count, err := file.Read(data)
+				fs, err := file.Stat();
 				if err != nil {
-					log.Println("ERR: file read:", f, " ", err)
-				} else if count == len(infectedHeader) && bytes.Compare(infectedHeader, data) == 0 {
-					foundFiles = append(foundFiles, f)
-					log.Println("FOUND INFECTED FILE:", path)
+					log.Println("ERR: file stat:", f, " ", err)
+				}
+				if fs.Size() >= int64(len(infectedHeader)) {
+					count, err := file.Read(data)
+
+					if err != nil {
+						log.Println("ERR: file read:", f, " ", err)
+					} else if count == len(infectedHeader) && bytes.Compare(infectedHeader, data) == 0 {
+						foundFiles = append(foundFiles, f)
+						log.Println("FOUND INFECTED FILE:", path)
+					}
 				}
 			}
 		}
@@ -59,25 +67,32 @@ func uniq(list []string) []string {
 }
 
 func main() {
-	infectedHeader = []byte{0xF4, 0x26, 0xA9, 0xD9, 0x4A, 0x01, 0x3F, 0x0C, 0x6C, 0x13, 0x04, 0x95, 0xE6, 0x3E, 0x2F, 0x45}
 	infectedFileName := "infected_files.txt"
 	infectedDirectoryFileName := "infected_directories.txt"
 
 	flag.Parse()
-	if len(os.Args) < 2 {
-		fmt.Println("usage: cryptofinder <start directory>")
+	if len(os.Args) < 3 {
+		fmt.Println("usage: cryptofinder <start directory> <header> [clean]")
 		return
 	}
+	var err error
+	infectedHeader, err = hex.DecodeString(flag.Arg(1))
+	if err != nil {
+		log.Fatal("Unable to decode bytes %v\n", err)
+	}
+
+	log.Println("Searching for", hex.EncodeToString(infectedHeader))
+
 
 	root := flag.Arg(0)
 	log.Println("Starting at", root)
 
-	if len(os.Args) >= 3 && flag.Arg(1) == "clean" {
+	if len(os.Args) >= 4 && flag.Arg(2) == "clean" {
 		clean = true
 		log.Println("Deleteing banners")
 	}
 
-	err := filepath.Walk(root, visit)
+	err = filepath.Walk(root, visit)
 	if err != nil {
 		log.Fatal("filepath.Walk() returned %v\n", err)
 	}

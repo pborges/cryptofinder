@@ -11,26 +11,26 @@ pre built binaries included in the dist directory
 
 **Usage**
 ```
-cryptofinder <start directory> [clean]
+cryptofinder <start directory> <header> [clean]
 ```
 
 **Ex**
 scan all files in the c:\ recursively
 ```
-cryptofinder c:\
+cryptofinder c:\ deadbeefcafe
 ```
 
 scan all files in the c:\ recursively and delete all the HELP_DECRYPT files while searching
 ```
-cryptofinder c:\ clean
+cryptofinder c:\ deadbeefcafe clean
 ```
 
 scan all files in the /home/pborges directory recursively
 ```
-cryptofinder /home/pborges
+cryptofinder /home/pborges deadbeefcafe
 ```
 
 scan all files in the /home/pborges directory recursively and delete all the HELP_DECRYPT files while searching
 ```
-cryptofinder /home/pborges clean
+cryptofinder /home/pborges deadbeefcafe clean
 ```
